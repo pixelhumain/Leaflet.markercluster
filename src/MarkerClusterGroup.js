@@ -150,7 +150,7 @@ export var MarkerClusterGroup = L.MarkerClusterGroup = L.FeatureGroup.extend({
 	},
 
 	removeLayer: function (layer) {
-		
+
 		if (layer instanceof L.LayerGroup) {
 			return this.removeLayers([layer]);
 		}
@@ -1101,6 +1101,38 @@ export var MarkerClusterGroup = L.MarkerClusterGroup = L.FeatureGroup.extend({
 		} else {
 			this._moveEnd();
 		}
+	},
+
+	restoreUnclusters: function (dontShowClusters) {
+		dontShowClusters = dontShowClusters || false;
+		//console.log("restore clusters", this._unclusters.length);
+		for (var i = this._unclusters.length - 1; i >= 0; i--) {
+			this._unclusters[i].restoreCluster(!dontShowClusters);
+		}
+		this._unclusters = [];
+	},
+
+	checkForUnclestering: function (bounds) {
+		bounds = bounds || this._map.getBounds();
+		var mapZoom = this._map.getZoom();
+		var index;
+
+		var that = this;
+		this._featureGroup.eachLayer(function (c) {
+			if (c instanceof L.MarkerCluster && !c._isUnclustered && c._zoom === mapZoom 
+				  && bounds.contains(c._latlng)) {
+				if (c.uncluster()) {
+					index = that._clustersWaitingToBeShown.indexOf(c);
+					if (index >= 0) that._clustersWaitingToBeShown.splice(index, 1);
+				}				
+			}
+		});
+
+		for (var i = this._clustersWaitingToBeShown.length - 1; i >= 0; i--) {
+		 	this._clustersWaitingToBeShown[i].clusterShow();
+		} 
+		this._clustersWaitingToBeShown = [];
+		//console.log("uncluster total", this._unclusters.length);
 	},
 
 	//Gets the maps visible bounds expanded in each direction by the size of the screen (so the user cannot see an area we do not cover in one pan)
