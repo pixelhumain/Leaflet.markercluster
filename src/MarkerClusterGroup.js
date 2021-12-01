@@ -139,8 +139,18 @@ export var MarkerClusterGroup = L.MarkerClusterGroup = L.FeatureGroup.extend({
 		return this;
 	},
 
-	removeLayer: function (layer) {
+	getClusters: function () {
+		var clusters = [];
+		this._featureGroup.eachLayer(function (c) {
+			if (c instanceof L.MarkerCluster) {
+				clusters.push(c);
+			}
+		});
+		return clusters;
+	},
 
+	removeLayer: function (layer) {
+		
 		if (layer instanceof L.LayerGroup) {
 			return this.removeLayers([layer]);
 		}
